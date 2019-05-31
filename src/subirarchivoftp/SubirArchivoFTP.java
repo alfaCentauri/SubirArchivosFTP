@@ -48,46 +48,51 @@ public class SubirArchivoFTP {
         try{
             System.out.println("Conectandose al servidor "+servidor);
             System.out.println("Por favor espere.");
-            FTPClient ftpClient = new FTPClient();
-            ftpClient.connect(InetAddress.getByName(servidor));
-            ftpClient.login(usuario,clave);
-            
-            //Verificar conexión con el servidor.
-            
-            int reply = ftpClient.getReplyCode();
-            
-            System.out.println("Respuesta recibida de conexión FTP:" + reply);
-            
+            FTPClient clienteFTP = new FTPClient();
+            clienteFTP.connect(InetAddress.getByName(servidor));
+            if(clienteFTP.login(usuario,clave))
+                System.out.println("Usuario conectado correctamente.");
+            else
+                System.out.println("Error el usuario ó clave erronea.");            
+            int reply = clienteFTP.getReplyCode();            
+            System.out.println("Respuesta recibida de conexión FTP:" + reply);            
             if(FTPReply.isPositiveCompletion(reply))
             {
                 System.out.println("Conectado Satisfactoriamente");    
             }
             else
             {
+                clienteFTP.disconnect();
                 System.out.println("Imposible conectarse al servidor");
+                System.exit(1);
             }
-           
-            //Verificar si se cambia de direcotirio de trabajo
-            
-            ftpClient.changeWorkingDirectory("/");//Cambiar directorio de trabajo
-            System.out.println("Se cambió satisfactoriamente el directorio");
+            if(clienteFTP.changeWorkingDirectory("/"))//Cambiar directorio de trabajo
+                System.out.println("Se cambió el directorio satisfactoriamente.");
+            else
+                System.out.println("No se cambió el directorio.");
             
             //Activar que se envie cualquier tipo de archivo
             
-            ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+            clienteFTP.setFileType(FTP.BINARY_FILE_TYPE);
             
             BufferedInputStream buffIn = null;
-            buffIn = new BufferedInputStream(new FileInputStream(""));//Ruta del archivo para enviar
-            ftpClient.enterLocalPassiveMode();
-            ftpClient.storeFile("", buffIn);//Ruta completa de alojamiento en el FTP
-            
+            buffIn = new BufferedInputStream(new FileInputStream("/home/ricardo/Descargas/ejercicio.txt"));//Ruta del archivo para enviar
+            clienteFTP.enterLocalPassiveMode();
+            if(clienteFTP.storeFile("archivo.txt", buffIn))
+                System.out.println("Se cargó el archivo correctamente.");
+            else
+                System.out.println("No se pudo subir el archivo al servidor ftp.");
             buffIn.close(); //Cerrar envio de arcivos al FTP
-            ftpClient.logout(); //Cerrar sesión
-            ftpClient.disconnect();//Desconectarse del servidor
+            if(clienteFTP.logout())
+                System.out.println("Sesion del usurio "+usuario+" ha finalizado correctamente.");
+            else
+                System.out.println("No se pudo cerrar la sesion del usurio "+usuario);
+            clienteFTP.disconnect();//Desconectarse del servidor
         }
         catch(Exception ex)
         {
             System.out.println("Error operación cancelada.\n"+ex.getMessage());
+            System.exit(1);
         }
     }
     
